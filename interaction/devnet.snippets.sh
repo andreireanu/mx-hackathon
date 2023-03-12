@@ -14,7 +14,7 @@ MARTA_ADDRESS_HEX="$(erdpy wallet bech32 --decode ${MARTA_ADDRESS})"
 MARTA_ADDRESS_HEXX="0x$(erdpy wallet bech32 --decode ${MARTA_ADDRESS})"
 
 SFT_ADDRESS="erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzllls8a5w6u"
- 
+SWAP_ADDRESS="erd1qqqqqqqqqqqqqpgq4my4pgeuceewx4avaqxddpsetz9v7hff7wpqs5w869"
 
 deploy() {
  erdpy contract deploy --chain="D" \
@@ -52,6 +52,7 @@ TKN_HEX="$(echo -n ${TKN_TICKER} | xxd -p -u | tr -d '\n')"
 
 NR=1000
  
+######## ISSUE FUNGIBLE TOKEN
 
 issueFungibleToken() {
     erdpy --verbose contract call ${CONTRACT_ADDRESS} \
@@ -67,68 +68,29 @@ issueFungibleToken() {
     --arguments "str:"$TKN_NAME "str:"$TKN_TICKER $NR 
 } 
 
-######## ISSUE TOKEN
+######## ISSUE NFT TOKEN
+
+sftIssue() {
+    erdpy --verbose contract call ${CONTRACT_ADDRESS} \
+    --send \
+    --value=50000000000000000 \
+    --proxy=${PROXY} \
+    --chain=${CHAIN_ID} \
+    --recall-nonce \
+    --pem=${WALLET_ALICE} \
+    --gas-limit=70000000 \
+    --proxy=${PROXY} \
+    --function="sftIssue" \
+    --arguments "str:"$TKN_NAME "str:"$TKN_TICKER  
+} 
  
-TOKEN_NAME=0x54657374546f6b656e
-TOKEN_NAME_HEX="$(echo -n ${TOKEN_NAME} | xxd -p -u | tr -d '\n')"
 
-TOKEN_TICKER=0x545354
-TOKEN_TICKER_HEX="$(echo -n ${TOKEN_TICKER} | xxd -p -u | tr -d '\n')"
-
-DECIMALS=18
-
-issueToken() {
-    erdpy --verbose contract call ${CONTRACT_ADDRESS} \
-    --send \
-    --value=50000000000000000 \
-    --proxy=${PROXY} \
-    --chain=${CHAIN_ID} \
-    --recall-nonce \
-    --pem=${WALLET_ALICE} \
-    --gas-limit=70000000 \
-    --proxy=${PROXY} \
-    --function="issueToken" \
-    --arguments $TOKEN_NAME $TOKEN_TICKER 
-}
-
-issueSft() {
-    erdpy --verbose contract call ${CONTRACT_ADDRESS} \
-    --send \
-    --value=50000000000000000 \
-    --proxy=${PROXY} \
-    --chain=${CHAIN_ID} \
-    --recall-nonce \
-    --pem=${WALLET_ALICE} \
-    --gas-limit=70000000 \
-    --proxy=${PROXY} \
-    --function="sft_issue" \
-    --arguments $TOKEN_NAME $TOKEN_TICKER 
-}
-
-getUserNft() {
-    mxpy --verbose contract query ${CONTRACT_ADDRESS} \
-    --function="getUserNft" \
-    --proxy=${PROXY} \
-    --arguments ${ALICE_ADDRESS}
-}
-
-#######
-
-ISS_TOKEN="TST-b23329"
+ISS_TOKEN="SLM-a81055"
 ISS_TOKEN_HEX="$(echo -n ${ISS_TOKEN} | xxd -p -u | tr -d '\n')"
 
-# setRole() {
-#     erdpy --verbose tx new \
-#     --send \
-#     --proxy=${PROXY} \
-#     --chain=${CHAIN_ID} \
-#     --pem=${WALLET_ALICE} \
-#     --recall-nonce \
-#     --gas-limit=100000000 \
-#     --receiver=${SFT_ADDRESS} \
-#     --data="setSpecialRole@${ISS_TOKEN_HEX}@${ALICE_ADDRESS_HEX}@45534454526f6c654e4654437265617465"  
-# }
-
+F_TOKEN="SLM-f73a62"
+F_TOKEN_HEX="$(echo -n ${F_TOKEN} | xxd -p -u | tr -d '\n')"
+ 
 setLocalRoles() {
     erdpy --verbose contract call ${CONTRACT_ADDRESS} \
     --send \
@@ -141,9 +103,7 @@ setLocalRoles() {
     --function="setLocalRoles" \
     --arguments "str:"$ISS_TOKEN 
 } 
- 
-
-#######
+  
 
 createNft() {
     erdpy --verbose contract call ${CONTRACT_ADDRESS} \
@@ -155,54 +115,102 @@ createNft() {
     --gas-limit=70000000 \
     --proxy=${PROXY} \
     --function="createNft"
-}
-
- 
-
-# 
-################
- 
- 
-
-
-###################################
-## Issue SFT
- 
-SPECIAL_ROLES="canAddSpecialRoles"
-SPECIAL_ROLES_HEX="$(echo -n ${SPECIAL_ROLES} | xxd -p -u | tr -d '\n')"
-
-TRUE="true"
-TRUE_HEX="$(echo -n ${TRUE} | xxd -p -u | tr -d '\n')"
-
-issueSFT() {
-    erdpy --verbose tx new \
-    --send \
-    --value=50000000000000000 \
-    --proxy=${PROXY} \
-    --chain=${CHAIN_ID} \
-    --pem=${WALLET_ALICE} \
-    --recall-nonce \
-    --gas-limit=100000000 \
-    --receiver=${SFT_ADDRESS} \
-    --data="issueSemiFungible@${TOKEN_NAME_HEX}@${TOKEN_TICKER_HEX}@${SPECIAL_ROLES_HEX}@${TRUE_HEX}"  
-}
- 
-
-
-ISSUED_TOKEN="HTKN-54137b"
-ISSUED_TOKEN_HEX="$(echo -n ${ISSUED_TOKEN} | xxd -p -u | tr -d '\n')" 
-
-QNT=1000
-QNT_HEX="$(echo -n ${QNT} | xxd -p -u | tr -d '\n')" 
-
-createSFT() {
-    erdpy --verbose tx new \
-    --send \
-    --proxy=${PROXY} \
-    --chain=${CHAIN_ID} \
-    --pem=${WALLET_ALICE} \
-    --recall-nonce \
-    --gas-limit=100000000 \
-    --receiver=${ALICE_ADDRESS} \
-    --data="ESDTNFTCreate@0${ISSUED_TOKEN}@${QNT_HEX}@${TOKEN_NAME_HEX}@1d4c@00@6d657461646174613a697066734349442f736f6e672e6a736f6e3b746167733a736f6e672c62656175746966756c2c6d75736963@55524c5f746f5f646563656e7472616c697a65645f73746f726167652f736f6e672e6d7033"  
 } 
+
+######## CLAIM TOKEN
+
+claim() {
+    erdpy --verbose contract call ${CONTRACT_ADDRESS} \
+    --send \
+    --proxy=${PROXY} \
+    --chain=${CHAIN_ID} \
+    --recall-nonce \
+    --pem=${WALLET_ALICE} \
+    --gas-limit=70000000 \
+    --proxy=${PROXY} \
+    --function="claim" \
+    --arguments "str:"$F_TOKEN 
+
+} 
+ 
+
+######## BUY TOKEN
+
+BUY="buyNft"
+BUY_HEX="$(echo -n ${BUY} | xxd -p -u | tr -d '\n')"
+ 
+AMOUNT="0.1"
+AMOUNT_HEX="$(echo -n ${AMOUNT} | xxd -p -u | tr -d '\n')"
+
+AMOUNT_TOKENS=10
+NFT_NONCE=1
+F_TOKEN_HEX2=str:SLM-f73a62
+BUY_HEX2=str:buyNft
+
+buyNft() {
+    erdpy --verbose contract call ${CONTRACT_ADDRESS} \
+    --send \
+    --proxy=${PROXY} \
+    --chain=${CHAIN_ID} \
+    --pem=${WALLET_ALICE} \
+    --recall-nonce \
+    --gas-limit=10000000 \
+    --function="ESDTTransfer" \
+    --arguments ${F_TOKEN_HEX2} ${AMOUNT_TOKENS} ${BUY_HEX2} ${ALICE_ADDRESS} ${NFT_NONCE}
+}
+ 
+buyNft2() {
+    erdpy --verbose tx new \
+    --send \
+    --proxy=${PROXY} \
+    --chain=${CHAIN_ID} \
+    --pem=${WALLET_ALICE} \
+    --recall-nonce \
+    --gas-limit=10000000 \
+    --receiver=${CONTRACT_ADDRESS} \
+    --data="ESDTTransfer@${F_TOKEN_HEX}@0a@${BUY_HEX}@${ALICE_ADDRESS_HEX}@$01" 
+}
+#########
+
+getUserNft() {
+    erdpy --verbose contract query ${CONTRACT_ADDRESS} \
+    --proxy=${PROXY} \
+    --function="getUserNft"  
+    }  
+
+getUserToken() {
+    erdpy --verbose contract query ${CONTRACT_ADDRESS} \
+    --proxy=${PROXY} \
+    --function="getUserToken"  
+    --data "str:"$WALLET_ALICE
+    }  
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
